@@ -1,0 +1,19 @@
+AI Code Security Debt Scorer - Run Commands
+
+Run these commands from the project root in two separate PowerShell terminals.
+
+BACKEND
+cd backend
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+python -m uvicorn server:app --reload --host 127.0.0.1 --port 8001
+
+FRONTEND
+cd frontend
+npm install --legacy-peer-deps --workspaces=false
+npm run dev -- --host 0.0.0.0
+
+Open http://localhost:3000 in your browser. The API docs are at http://localhost:8001/docs.
+SQLite initializes automatically. AI_API_KEY is optional; without it the app uses mock AI mode.
