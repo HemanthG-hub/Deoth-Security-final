@@ -95,8 +95,8 @@ persist through a repository module so SQLite can later be replaced by PostgreSQ
   `tsconfig.app.json`/`tsconfig.json` and `vite.config.ts`.
 - `react-router-dom` and `motion` are preinstalled — don't re-add them. `src/App.tsx`
   is the `<Routes>` table and nothing else; screens live in `src/pages/*.tsx` and are
-  imported as `@/pages/<Name>`. `src/pages/Home.tsx` ships as the worked example. Add
-  a `<Route>` for every page you write, in the same edit that creates the page — a
+  imported as `@/pages/<Name>`. Add a `<Route>` for every page you write, in the
+  same edit that creates the page — a
   page with no route is unreachable, and any URL without a matching `<Route>` renders a
   **blank page** — `<Routes>` matches nothing and mounts nothing.
 - Components installed under `src/components/ui/`: button, card, input, label,
@@ -109,12 +109,8 @@ persist through a repository module so SQLite can later be replaced by PostgreSQ
   yourself as a TS interface mirroring the endpoint's Pydantic model, and keeping
   the two in sync is a manual discipline. When you change a Pydantic model,
   change its TS interface in the same edit.
-- `src/pages/Home.tsx` is a minimal example of the wiring: TanStack Query's `useQuery`
-  with `apiGet<StatusCheck[]>("/status")` as the `queryFn`. It is a **non-blocking
-  connectivity probe**, not a proof of the round trip — the result is deliberately
-  discarded so the splash renders identically with no backend. `apiGet<T>` does no
-  runtime validation either; `T` is your assertion, not a check. See the
-  static-preview rule in `TEMPLATE.md` §4 for why no page may be gated on a fetch.
+- `apiGet<T>` does no runtime validation; `T` is a compile-time assertion, not a
+  runtime check. Keep frontend response interfaces aligned with backend models.
 
 ## TypeScript
 
@@ -131,9 +127,8 @@ use `-b` for the frontend. Lint with `cd frontend && yarn lint` (oxlint).
 
 ## Data fetching
 
-TanStack Query is wired: `QueryClientProvider` in `src/main.tsx`, `useQuery` demo
-in `src/pages/Home.tsx` (see above). Use `useQuery`/`useMutation`, not
-fetch-in-`useEffect`.
+TanStack Query is wired through `QueryClientProvider` in `src/main.tsx`. Use
+`useQuery`/`useMutation` for server state instead of fetching in `useEffect`.
 
 ## Completion gate (tier 1)
 
@@ -175,29 +170,5 @@ matching Chromium browsers live at `/pw-browsers`.
 The backend lane is pytest: this template's backend is Python, so `vitest` does
 not apply to it.
 
-## Pod conventions
+For Windows PowerShell startup commands, see `RUNNING.txt`.
 
-This template runs under supervisord in the Emergent agent pod — supersedes any
-local-run instructions above.
-
-- Backend, frontend, and `mongod` are each a supervisor program. After code or
-  config changes, restart and wait for readiness:
-
-  ```powershell
-  # Local development uses one terminal for each command; no supervisor or MongoDB is required.
-  cd backend; python -m uvicorn server:app --reload --port 8001
-  cd frontend; npm run dev -- --host 0.0.0.0
-  ```
-
-- Status, only after a restart you triggered:
-  `sudo supervisorctl status frontend backend`. Logs:
-  `/var/log/supervisor/backend.err.log`, `backend.out.log`,
-  `frontend.err.log`.
-- App in a browser: the pod's preview URL (frontend, port `3000`). Backend API
-  directly at port `8001`.
-- SQLite is initialized automatically on backend startup; the optional AI API
-  key is read only by FastAPI from `backend/.env`.
-- Both dev servers hot-reload on file edits (uvicorn `--reload` for the backend,
-  Vite HMR for the frontend); no rebuild step needed for normal iteration. A
-  restart is still needed after changing `.env`, `requirements.txt`, or
-  `vite.config.ts`.
